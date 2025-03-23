@@ -3,4 +3,5 @@
     <string name="weather_app">Weather App</string>
     <string name="enter_your_city">Enter your city</string>
     <string name="search">Search</string>
+    <string name="pressure">Pressure</string>
 </resources>

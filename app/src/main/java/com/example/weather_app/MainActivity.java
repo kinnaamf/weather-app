@@ -5,6 +5,8 @@ import android.annotation.SuppressLint;
 import android.os.*;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONObject;
@@ -15,15 +17,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
-    TextView cityName;
+    EditText cityName;
     Button search;
-    TextView show;
+    TextView temperature, humidity, windSpeed, pressure;
+    ImageView tempIcon, humidityIcon, windIcon, pressureIcon;
     String url;
 
-    class getWeather extends AsyncTask<String, Void, String> {
+    class GetWeather extends AsyncTask<String, Void, String> {
         private String city;
 
-        public getWeather(String city) {
+        public GetWeather(String city) {
             this.city = city;
         }
 
@@ -54,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if (result == null) {
-                show.setText("No weather data.");
+                temperature.setText("No weather data.");
                 return;
             }
 
@@ -62,18 +65,21 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject jsonObject = new JSONObject(result);
                 JSONObject main = jsonObject.getJSONObject("main");
                 JSONObject wind = jsonObject.getJSONObject("wind");
-                double getTemp = Double.parseDouble(main.getString("temp"));
-                double temperature = (int) Math.round(getTemp);
-                String humidity = main.getString("humidity");
+                double getTemp = main.getDouble("temp");
+                int roundedTemp = (int) Math.round(getTemp);
+                String humidityValue = main.getString("humidity");
                 String windVelocity = wind.getString("speed");
+                String pressureValue = main.getString("pressure");
 
-                show.setText("Temperatura in " + city + " acum!\n" +
-                        "Temperatura aerului: " + temperature + "°C\n" +
-                        "Umiditatea: " + humidity + "%\n" +
-                        "Viteza vântului: " + windVelocity + " m/s");
+                temperature.setText(roundedTemp + "°C");
+                humidity.setText(humidityValue + "%");
+                windSpeed.setText(windVelocity + " m/s");
+                pressure.setText(pressureValue + " hPa");
+
+                findViewById(R.id.weather_info).setVisibility(View.VISIBLE);
             } catch (Exception e) {
                 e.printStackTrace();
-                show.setText("Error parsing data.");
+                temperature.setText("Error parsing data.");
             }
         }
     }
@@ -85,7 +91,21 @@ public class MainActivity extends AppCompatActivity {
 
         cityName = findViewById(R.id.cityName);
         search = findViewById(R.id.search);
-        show = findViewById(R.id.weather);
+        temperature = findViewById(R.id.temperature);
+        humidity = findViewById(R.id.humidity);
+        windSpeed = findViewById(R.id.wind_speed);
+        pressure = findViewById(R.id.pressure);
+        tempIcon = findViewById(R.id.temp_icon);
+        humidityIcon = findViewById(R.id.humidity_icon);
+        windIcon = findViewById(R.id.wind_icon);
+        pressureIcon = findViewById(R.id.pressure_icon);
+
+        tempIcon.setImageResource(R.drawable.ic_temperature);
+        humidityIcon.setImageResource(R.drawable.ic_humidity);
+        windIcon.setImageResource(R.drawable.ic_wind);
+        pressureIcon.setImageResource(R.drawable.ic_pressure);
+
+        findViewById(R.id.weather_info).setVisibility(View.GONE);
 
         search.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,10 +118,8 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 String apiKey = "2533d8acadb078951a0a5158563e0398";
-                url = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + apiKey + "&units=metric"; // Добавил &units=metric
-
-                getWeather task = new getWeather(city);
-                task.execute(url);
+                url = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=" + apiKey + "&units=metric";
+                new GetWeather(city).execute(url);
             }
         });
     }
